@@ -1,0 +1,17 @@
+{
+  "name": "日課記録 - 颯介",
+  "short_name": "日課記録",
+  "description": "愛媛大 海事産業特別コース 2028年度入試対策記録",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f0f4f8",
+  "theme_color": "#1a3a6a",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a3a6a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="日課記録">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>日課記録</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif; background: #f0f4f8; color: #222; padding: 16px; max-width: 600px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
+h1 { font-size: 19px; color: #1a3a6a; margin-bottom: 4px; }
+.sub { font-size: 12px; color: #888; margin-bottom: 16px; }
+.tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.tab { padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; border: 2px solid #ddd; background: white; color: #888; font-family: inherit; }
+.tab.active { background: #1a3a6a; color: white; border-color: #1a3a6a; }
+.card { background: white; border-radius: 12px; padding: 18px; margin-bottom: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+.card-title { font-size: 14px; font-weight: bold; color: #1a3a6a; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.check-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.check-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.check-btn { width: 52px; height: 52px; border-radius: 50%; border: 2px solid #ddd; background: white; font-size: 22px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.check-btn.done { background: #1a3a6a; border-color: #1a3a6a; }
+.check-label { font-size: 11px; color: #666; text-align: center; }
+textarea { width: 100%; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 10px 12px; font-size: 14px; font-family: inherit; line-height: 1.6; resize: none; color: #222; background: #fafafa; }
+textarea:focus { outline: none; border-color: #1a3a6a; background: white; }
+.field-label { font-size: 12px; color: #666; margin-bottom: 6px; margin-top: 12px; }
+.haruna-fields { display: flex; flex-direction: column; gap: 10px; }
+.phase-select { width: 100%; padding: 10px 12px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; background: #fafafa; color: #222; }
+.phase-select:focus { outline: none; border-color: #1a3a6a; }
+.num-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.num-field label { font-size: 11px; color: #666; display: block; margin-bottom: 4px; }
+.num-field input { width: 100%; padding: 8px 10px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; background: #fafafa; }
+.num-field input:focus { outline: none; border-color: #1a3a6a; }
+.text-input { width: 100%; padding: 8px 10px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; font-family: inherit; background: #fafafa; }
+.text-input:focus { outline: none; border-color: #1a3a6a; }
+.industry-list { display: flex; flex-direction: column; gap: 8px; }
+.industry-item { display: flex; gap: 8px; align-items: flex-start; }
+.industry-item input { flex: 1; padding: 8px 10px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; font-family: inherit; background: #fafafa; }
+.industry-item input:focus { outline: none; border-color: #1a3a6a; }
+.del-btn { padding: 8px 10px; border: none; background: #ffd6d6; color: #c43030; border-radius: 8px; cursor: pointer; font-size: 13px; flex-shrink: 0; }
+.add-btn { padding: 8px 14px; border: 2px dashed #ccc; background: white; color: #888; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; width: 100%; margin-top: 4px; }
+.add-btn:hover { border-color: #1a3a6a; color: #1a3a6a; }
+.save-btn { width: 100%; padding: 14px; background: #1a3a6a; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: inherit; margin-top: 4px; }
+.save-ok { background: #2c8a2c !important; }
+.stat-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 14px; }
+.stat-item { background: white; border-radius: 10px; padding: 14px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.stat-num { font-size: 28px; font-weight: bold; color: #1a3a6a; }
+.stat-label { font-size: 11px; color: #888; margin-top: 2px; }
+.streak-bar { display: flex; gap: 3px; flex-wrap: wrap; }
+.streak-dot { width: 22px; height: 22px; border-radius: 4px; }
+.history-card { background: white; border-radius: 10px; padding: 14px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.history-date { font-size: 13px; font-weight: bold; color: #1a3a6a; margin-bottom: 8px; }
+.history-checks { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+.history-check { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #e8f0fb; color: #1a3a6a; }
+.history-text { font-size: 13px; color: #444; line-height: 1.6; margin-top: 6px; white-space: pre-wrap; }
+.history-haruna { background: #f0f8f0; border-radius: 6px; padding: 8px 10px; margin-top: 6px; font-size: 12px; color: #1a5a1a; line-height: 1.6; }
+.del-record { float: right; font-size: 11px; color: #ccc; cursor: pointer; }
+.del-record:hover { color: #c43030; }
+.no-record { text-align: center; color: #aaa; font-size: 14px; padding: 32px 0; }
+.total-card { background: linear-gradient(135deg,#1a3a6a,#2a5aa0); color: white; border-radius: 12px; padding: 20px; margin-bottom: 14px; }
+.total-label { font-size: 13px; opacity: 0.8; margin-bottom: 4px; }
+.total-num { font-size: 48px; font-weight: bold; line-height: 1; }
+.total-unit { font-size: 20px; }
+.total-sub { font-size: 12px; opacity: 0.7; margin-top: 8px; }
+</style>
+</head>
+<body>
+<h1>📋 日課記録</h1>
+<div class="sub">中野颯介 / 愛媛大 海事産業特別コース 2028</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="today">今日</button>
+  <button class="tab" data-tab="history">履歴</button>
+  <button class="tab" data-tab="stats">統計</button>
+</div>
+
+<div id="tab-today">
+  <div class="card">
+    <div class="card-title">📅 日付</div>
+    <input type="date" id="rec-date" style="width:100%;padding:10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:15px;font-family:inherit;background:#fafafa;">
+  </div>
+
+  <div class="card">
+    <div class="card-title">✅ 勉強チェック</div>
+    <div class="check-grid" id="check-grid"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⏱️ 勉強時間（はるな除く）</div>
+    <div class="num-row">
+      <div class="num-field">
+        <label>勉強時間（分）</label>
+        <input type="number" id="study-time" placeholder="例：90">
+      </div>
+      <div class="num-field">
+        <label>内訳メモ</label>
+        <input type="text" id="study-memo" class="text-input" placeholder="例：数学60+物理30">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🚢 はるな製作日誌</div>
+    <div class="haruna-fields">
+      <div>
+        <div class="field-label">フェーズ</div>
+        <select class="phase-select" id="haruna-phase">
+          <option value="">-- 今日のフェーズ --</option>
+          <option value="フェーズ0：試作">フェーズ0：試作（設計ミス確認）</option>
+          <option value="フェーズ1：船体・推進・防水">フェーズ1：船体・推進・防水</option>
+          <option value="フェーズ2：ギミック・カメラ">フェーズ2：ギミック・カメラ</option>
+          <option value="フェーズ3：センサー・通信">フェーズ3：センサー・通信</option>
+          <option value="フェーズ4：自律航行">フェーズ4：自律航行</option>
+          <option value="設計・調査">設計・調査のみ</option>
+          <option value="はるななし">今日ははるななし</option>
+        </select>
+      </div>
+      <div>
+        <div class="field-label">今日やったこと</div>
+        <textarea id="haruna-work" rows="3" placeholder="例：バルジ部分の3Dプリント。支持材の除去に苦労した。"></textarea>
+      </div>
+      <div class="num-row">
+        <div class="num-field">
+          <label>GM実測値（mm）</label>
+          <input type="number" id="haruna-gm" placeholder="例：26.2" step="0.1">
+        </div>
+        <div class="num-field">
+          <label>はるな作業時間（分）</label>
+          <input type="number" id="haruna-time" placeholder="例：120">
+        </div>
+      </div>
+      <div>
+        <div class="field-label">気づき・失敗・次回やること</div>
+        <textarea id="haruna-memo" rows="3" placeholder="例：Oリング溝の深さが浅くて水が漏れた。次回は深さ2mmに修正する。"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🌊 業界・入試メモ</div>
+    <div class="industry-list" id="industry-list"></div>
+    <button class="add-btn" id="add-industry">＋ メモを追加</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📝 今日の3行まとめ</div>
+    <div class="field-label">①今日一番頑張ったこと</div>
+    <textarea id="diary1" rows="2" placeholder="例：物理の浮力の計算式を声に出して説明する練習をした"></textarea>
+    <div class="field-label">②気づいたこと・発見</div>
+    <textarea id="diary2" rows="2" placeholder="例：BM=I/Vの意味がはるなのGM計算と繋がってようやく腑に落ちた"></textarea>
+    <div class="field-label">③明日やること</div>
+    <textarea id="diary3" rows="2" placeholder="例：ITパスポート過去問を30問解く。はるなのOリング溝を修正する。"></textarea>
+  </div>
+
+  <button class="save-btn" id="save-btn">💾 保存する</button>
+</div>
+
+<div id="tab-history" style="display:none;">
+  <div id="history-content"></div>
+</div>
+
+<div id="tab-stats" style="display:none;">
+  <div id="stats-content"></div>
+</div>
+
+<script>
+var CHECKS = [
+  {id:'math', label:'数学', emoji:'📐'},
+  {id:'physics', label:'物理', emoji:'⚓'},
+  {id:'english', label:'英語', emoji:'📖'},
+  {id:'it', label:'ITパス', emoji:'💻'},
+  {id:'haruna', label:'はるな', emoji:'🚢'},
+  {id:'industry', label:'業界研究', emoji:'🌊'},
+];
+var checkState = {};
+var industryItems = [];
+
+function init() {
+  var today = new Date();
+  var y = today.getFullYear();
+  var m = String(today.getMonth()+1).padStart(2,'0');
+  var d = String(today.getDate()).padStart(2,'0');
+  document.getElementById('rec-date').value = y+'-'+m+'-'+d;
+
+  var grid = document.getElementById('check-grid');
+  grid.innerHTML = '';
+  CHECKS.forEach(function(c) {
+    checkState[c.id] = false;
+    var div = document.createElement('div');
+    div.className = 'check-item';
+    div.innerHTML = '<button class="check-btn" id="chk-'+c.id+'">'+c.emoji+'</button><span class="check-label">'+c.label+'</span>';
+    grid.appendChild(div);
+    document.getElementById('chk-'+c.id).addEventListener('click', function() {
+      checkState[c.id] = !checkState[c.id];
+      this.classList.toggle('done', checkState[c.id]);
+    });
+  });
+
+  addIndustry('');
+  document.getElementById('add-industry').addEventListener('click', function() { addIndustry(''); });
+
+  document.querySelectorAll('.tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+      this.classList.add('active');
+      ['today','history','stats'].forEach(function(id){
+        var el = document.getElementById('tab-'+id);
+        if (el) el.style.display = 'none';
+      });
+      document.getElementById('tab-'+this.getAttribute('data-tab')).style.display = 'block';
+      if (this.getAttribute('data-tab') === 'history') renderHistory();
+      if (this.getAttribute('data-tab') === 'stats') renderStats();
+    });
+  });
+
+  document.getElementById('save-btn').addEventListener('click', saveRecord);
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  }
+}
+
+function addIndustry(val) {
+  var list = document.getElementById('industry-list');
+  var idx = industryItems.length;
+  industryItems.push(val);
+  var div = document.createElement('div');
+  div.className = 'industry-item';
+  div.innerHTML = '<input type="text" placeholder="例：今治造船、水素船の実証実験開始" value="'+val+'"><button class="del-btn">✕</button>';
+  div.querySelector('input').addEventListener('input', function() { industryItems[idx] = this.value; });
+  div.querySelector('.del-btn').addEventListener('click', function() { div.remove(); });
+  list.appendChild(div);
+}
+
+function getRecords() {
+  try { return JSON.parse(localStorage.getItem('haruna_records') || '[]'); } catch(e) { return []; }
+}
+function saveRecords(r) { localStorage.setItem('haruna_records', JSON.stringify(r)); }
+
+function saveRecord() {
+  var date = document.getElementById('rec-date').value;
+  if (!date) { alert('日付を入れてください'); return; }
+  var checks = [];
+  CHECKS.forEach(function(c) { if (checkState[c.id]) checks.push(c.label); });
+  var industries = [];
+  document.querySelectorAll('#industry-list input').forEach(function(inp) { if (inp.value.trim()) industries.push(inp.value.trim()); });
+  var record = {
+    date: date,
+    checks: checks,
+    studyTime: parseInt(document.getElementById('study-time').value || '0', 10),
+    studyMemo: document.getElementById('study-memo').value,
+    haruna: {
+      phase: document.getElementById('haruna-phase').value,
+      work: document.getElementById('haruna-work').value,
+      gm: document.getElementById('haruna-gm').value,
+      time: document.getElementById('haruna-time').value,
+      memo: document.getElementById('haruna-memo').value,
+    },
+    industries: industries,
+    diary: [
+      document.getElementById('diary1').value,
+      document.getElementById('diary2').value,
+      document.getElementById('diary3').value,
+    ],
+  };
+  var records = getRecords();
+  var existIdx = -1;
+  records.forEach(function(r, i) { if (r.date === date) existIdx = i; });
+  if (existIdx >= 0) records[existIdx] = record;
+  else records.unshift(record);
+  saveRecords(records);
+  var btn = document.getElementById('save-btn');
+  btn.textContent = '✅ 保存しました！';
+  btn.classList.add('save-ok');
+  setTimeout(function() { btn.textContent = '💾 保存する'; btn.classList.remove('save-ok'); }, 2000);
+}
+
+function renderHistory() {
+  var records = getRecords();
+  var el = document.getElementById('history-content');
+  if (records.length === 0) { el.innerHTML = '<div class="no-record">記録がまだありません</div>'; return; }
+  var html = '';
+  records.slice(0,30).forEach(function(r, i) {
+    var checksHtml = (r.checks||[]).map(function(c){ return '<span class="history-check">'+c+'</span>'; }).join('');
+    var harunaHtml = '';
+    if (r.haruna && (r.haruna.phase || r.haruna.work)) {
+      harunaHtml = '<div class="history-haruna">🚢 '+(r.haruna.phase ? '<b>'+r.haruna.phase+'</b><br>' : '')+(r.haruna.work ? r.haruna.work+'<br>' : '')+(r.haruna.gm ? 'GM実測：'+r.haruna.gm+'mm　' : '')+(r.haruna.time ? '作業：'+r.haruna.time+'分' : '')+(r.haruna.memo ? '<br>'+r.haruna.memo : '')+'</div>';
+    }
+    var studyHtml = '';
+    if (r.studyTime) studyHtml = '<div style="font-size:12px;color:#666;margin-top:4px;">⏱️ 勉強'+r.studyTime+'分'+(r.studyMemo?' ('+r.studyMemo+')':'')+'</div>';
+    var diaryHtml = '';
+    if (r.diary && (r.diary[0]||r.diary[1]||r.diary[2])) diaryHtml = '<div class="history-text">'+(r.diary[0]?'①'+r.diary[0]+'\n':'')+(r.diary[1]?'②'+r.diary[1]+'\n':'')+(r.diary[2]?'③'+r.diary[2]:'')+'</div>';
+    var industryHtml = '';
+    if (r.industries && r.industries.length > 0) industryHtml = '<div class="history-text" style="color:#1a5a6a;">🌊 '+r.industries.join(' / ')+'</div>';
+    html += '<div class="history-card"><span class="del-record" data-idx="'+i+'">削除</span><div class="history-date">'+r.date+'</div><div class="history-checks">'+checksHtml+'</div>'+studyHtml+harunaHtml+industryHtml+diaryHtml+'</div>';
+  });
+  el.innerHTML = html;
+  el.querySelectorAll('.del-record').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (!confirm('この記録を削除しますか？')) return;
+      var records = getRecords();
+      records.splice(parseInt(this.getAttribute('data-idx')),1);
+      saveRecords(records);
+      renderHistory();
+    });
+  });
+}
+
+function renderStats() {
+  var records = getRecords();
+  var el = document.getElementById('stats-content');
+  var totalDays = records.length;
+  var harunaCount = records.filter(function(r){ return r.checks && r.checks.indexOf('はるな')>=0; }).length;
+  var physicsCount = records.filter(function(r){ return r.checks && r.checks.indexOf('物理')>=0; }).length;
+  var totalStudyMin = 0, totalHarunaMin = 0;
+  records.forEach(function(r) {
+    if (r.studyTime) totalStudyMin += r.studyTime;
+    if (r.haruna && r.haruna.time) totalHarunaMin += parseInt(r.haruna.time||'0',10);
+  });
+  var grand = totalStudyMin + totalHarunaMin;
+  var grandH = Math.floor(grand/60), grandM = grand%60;
+  var streak = 0;
+  var today = new Date();
+  records.forEach(function(r, i) {
+    var diff = Math.round((today - new Date(r.date)) / 86400000);
+    if (diff === i) streak++;
+  });
+  var last30 = [];
+  for (var i = 29; i >= 0; i--) {
+    var d = new Date(today); d.setDate(d.getDate()-i);
+    var ds = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    last30.push(records.some(function(r){ return r.date===ds; }));
+  }
+  var dotsHtml = last30.map(function(has){ return '<div class="streak-dot" style="background:'+(has?'#1a3a6a':'#e0e0e0')+';"></div>'; }).join('');
+
+  el.innerHTML =
+    '<div class="total-card">'+
+    '<div class="total-label">⏱️ 累計総勉強時間</div>'+
+    '<div class="total-num">'+grandH+'<span class="total-unit">時間</span>'+grandM+'<span class="total-unit">分</span></div>'+
+    '<div class="total-sub">勉強 '+Math.floor(totalStudyMin/60)+'h'+totalStudyMin%60+'m　＋　はるな作業 '+Math.floor(totalHarunaMin/60)+'h'+totalHarunaMin%60+'m</div>'+
+    '</div>'+
+    '<div class="stat-grid">'+
+    '<div class="stat-item"><div class="stat-num">'+totalDays+'</div><div class="stat-label">記録した日数</div></div>'+
+    '<div class="stat-item"><div class="stat-num">'+streak+'</div><div class="stat-label">連続記録日数</div></div>'+
+    '<div class="stat-item"><div class="stat-num">'+harunaCount+'</div><div class="stat-label">はるな作業日</div></div>'+
+    '<div class="stat-item"><div class="stat-num">'+physicsCount+'</div><div class="stat-label">物理勉強日</div></div>'+
+    '</div>'+
+    '<div class="card"><div class="card-title">📅 直近30日の記録</div><div class="streak-bar">'+dotsHtml+'</div><div style="font-size:11px;color:#888;margin-top:8px;">■ 記録あり　□ 記録なし</div></div>';
+}
+
+init();
+</script>
+</body>
+</html>
